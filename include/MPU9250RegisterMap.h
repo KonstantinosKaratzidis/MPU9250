@@ -1,7 +1,7 @@
 #ifndef MPU9250REGISTERMAP_H
 #define MPU9250REGISTERMAP_H
 
-// identification register
+// identification register (117)
 #define WHO_AM_I_MPU9250       0x75 // Should return 0x71
 #define WHO_AM_I_MPU9250_VALUE 0x71
 
@@ -9,7 +9,7 @@
 //           Power management and reset
 ////////////////////////////////////////////////////
 
-// Power Management 1
+// Power Management 1 (107)
 #define PWR_MGMT_1               0x6B
 #define PWR_MGMT_1_H_RESET       (1 << 7)
 #define PWR_MGMT_1_SLEEP         (1 << 6)
@@ -19,7 +19,7 @@
 #define PWR_MGMT_1_CLKSEL(s)     ((s) & 0b111)
 #define PWR_MGMT_1_CLKSEL_MASK   (0b111)
 
-// Power Management 2
+// Power Management 2 (108)
 #define PWR_MGMT_2             0x6C
 #define PWR_MGMT_2_DISABLE_XA  (1 << 5)
 #define PWR_MGMT_2_DISABLE_YA  (1 << 4)
@@ -28,13 +28,13 @@
 #define PWR_MGMT_2_DISABLE_YG  (1 << 1)
 #define PWR_MGMT_2_DISABLE_ZG  (1 << 0)
 
-// Signal Path Reset
+// Signal Path Reset (120)
 #define SIGNAL_PATH_RESET        0x68
 #define SIGNAL_PATH_RESET_GYRO   (1 << 2)
 #define SIGNAL_PATH_RESET_ACCEL  (1 << 1)
 #define SIGNAL_PATH_RESET_TEMP   (1 << 0)
 
-// User Control
+// User Control (106)
 #define USER_CTRL               0x6A
 #define USER_CTRL_FIFO_EN       (1 << 6)
 #define USER_CTRL_I2C_MST_EN    (1 << 5)
@@ -48,7 +48,7 @@
 //                   Interrupts
 ////////////////////////////////////////////////////
 
-// INT Pin / Bypass Enable Configuration
+// INT Pin / Bypass Enable Configuration (55)
 #define INT_PIN_CFG                    0x37
 #define INT_PIN_CFG_ACTL               (1 << 7)
 #define INT_PIN_CFG_OPEN               (1 << 6)
@@ -58,21 +58,21 @@
 #define INT_PIN_CFG_FSYNC_INT_MODE_EN  (1 << 2)
 #define INT_PIN_CFG_BYPASS_EN          (1 << 1)
 
-// Interrupt Enable
+// Interrupt Enable (56)
 #define INT_ENABLE                0x38
 #define INT_ENABLE_WOM            (1 << 6)
 #define INT_ENABLE_FIFO_OVERFLOW  (1 << 4)
 #define INT_ENABLE_FSYNC          (1 << 3)
 #define INT_ENABLE_RAW_RDY        (1 << 0)
 
-// Interrupt Status
+// Interrupt Status (58)
 #define INT_STATUS                0x3A
 #define INT_STATUS_WOM            (1 << 6)
 #define INT_STATUS_FIFO_OVERFLOW  (1 << 4)
 #define INT_STATUS_FSYNC          (1 << 3)
 #define INT_STATUS_RAW_RDY        (1 << 0)
 
-// Accelerometer Interrupt Control
+// Accelerometer Interrupt Control (105)
 // (the same register as MOT_DETECT_CTRL)
 #define MOT_DETECT_CTRL       0x69
 #define MOT_DETECT_CTRL_EN   (1 << 7)
@@ -81,18 +81,18 @@
 #define ACCEL_INTEL_CTRL_EN   (1 << 7)
 #define ACCEL_INTER_CTRL_MODE (1 << 6)
 
-// Wake-on Motion Threshold
+// Wake-on Motion Threshold (31)
 #define WOM_THR          0x1F
 
 //////////////////////////////////////////////////////
 //               Common Configuration
 //////////////////////////////////////////////////////
 
-// sample rate divider
+// sample rate divider (25)
 // has an effect only when low pass filter is activated
 #define SMPLRT_DIV       0x19
 
-// Configuration (also affects gyroscope)
+// Configuration (also affects gyroscope) (26)
 #define MPU_CONFIG                0x1A
 #define MPU_CONFIG_FIFO_MODE      (1 << 6)
 #define MPU_CONFIG_SYNC_SET(s)    (((s) & 0b111) << 3)
@@ -104,7 +104,7 @@
 //                    Gyroscope
 //////////////////////////////////////////////////////
 
-// Gyroscope Configuration
+// Gyroscope Configuration (27)
 #define GYRO_CONFIG                 0x1B
 #define GYRO_CONFIG_XGYRO_Cten      (1 << 7)
 #define GYRO_CONFIG_YGYRO_Cten      (1 << 6)
@@ -114,12 +114,12 @@
 #define GYRO_CONFIG_Fchoice_b(s)    ((s) & 0b11)
 #define GYRO_CONFIG_Fchoice_b_MASK  (0b11)
 
-// Gyroscope Self Test Registers
+// Gyroscope Self Test Registers (0, 1, 2)
 #define SELF_TEST_X_GYRO 0x00
 #define SELF_TEST_Y_GYRO 0x01
 #define SELF_TEST_Z_GYRO 0x02
 
-// Gyroscope Offset Registers
+// Gyroscope Offset Registers (13-24)
 #define XG_OFFSET_H      0x13
 #define XG_OFFSET_L      0x14
 #define YG_OFFSET_H      0x15
@@ -131,7 +131,7 @@
 //                   Accelerometer
 //////////////////////////////////////////////////////
 
-// Accelerometer Configuration
+// Accelerometer Configuration (28)
 #define ACCEL_CONFIG              0x1C
 #define ACCEL_CONFIG_ax_st_en     (1 << 7)
 #define ACCEL_CONFIG_ay_st_en     (1 << 6)
@@ -139,23 +139,23 @@
 #define ACCEL_CONFIG_FS_SEL(s)    (((s) & 0b11) << 3)
 #define ACCEL_CONFIG_FS_SEL_MAKS  (0b11 << 3)
 
-// Accelerometer Configuration 2
+// Accelerometer Configuration 2 (29)
 #define ACCEL_CONFIG2               0x1D
 #define ACCEL_CONFIG2_fchoice_b     (1 << 3)
 #define ACCEL_CONFIG2_DLPFCFG(s)    (((s) & 0b111))
 #define ACCEL_CONFIG2_DLPFCFG_MASK  (0b111)
 
-// Low Power Accelerometer ODR Control
+// Low Power Accelerometer ODR Control (30)
 #define LP_ACCEL_ODR             0x1E
 #define LP_ACCEL_ODR_clksel(s)   ((s) & 0b1111)
 #define LP_ACCEL_ODR_clksel_MASK (0b1111)
 
-// Accelerometer Self Test Registers
+// Accelerometer Self Test Registers (13-15)
 #define SELF_TEST_X_ACCEL 0x0D
 #define SELF_TEST_Y_ACCEL 0x0E
 #define SELF_TEST_Z_ACCEL 0x0F
 
-// Accelerometer Offset Value Registers
+// Accelerometer Offset Value Registers (119-126)
 #define XA_OFFSET_H      0x77
 #define XA_OFFSET_L      0x78
 #define YA_OFFSET_H      0x7A
@@ -167,7 +167,7 @@
 //                FIFO
 /////////////////////////////////////////////////
 
-// FIFO Enable
+// FIFO Enable (35)
 #define FIFO_EN        0x23
 #define FIFO_EN_TEMP   (1 << 7)
 #define FIFO_EN_GYROX  (1 << 6)
@@ -178,19 +178,19 @@
 #define FIFO_EN_SLV_1  (1 << 1)
 #define FIFO_EN_SLV_0  (1 << 0)
 
-// Fifo Count
+// Fifo Count (114, 115)
 #define FIFO_COUNTH      0x72
 #define FIFO_COUNTH_MASK (0b11111)
 #define FIFO_COUNTL      0x73
 
-// Fifo data
+// Fifo data (116)
 #define FIFO_R_W         0x74
 
 /////////////////////////////////////////////////
 //                I2C Master
 /////////////////////////////////////////////////
 
-// I2C Master Control
+// I2C Master Control (36)
 #define I2C_MST_CTRL                0x24
 #define I2C_MST_CTRL_MULT_MST_EN    (1 << 7)
 #define I2C_MST_CTRL_WAIT_FOR_ES    (1 << 6)
@@ -199,7 +199,7 @@
 #define I2C_MST_CTRL_CLK(s)         ((s) & 0b1111)
 #define I2C_MST_CTRL_CLK_MASK       (0b1111)
 
-// I2C Master Delay Control
+// I2C Master Delay Control (103)
 #define I2C_MST_DELAY_CTRL         0x67
 #define I2C_MST_DELAY_CTRL_SHADOW  (1 << 7)
 #define I2C_MST_DELAY_CTRL_SLV4    (1 << 4)
@@ -208,7 +208,7 @@
 #define I2C_MST_DELAY_CTRL_SLV1    (1 << 1)
 #define I2C_MST_DELAY_CTRL_SLV0    (1 << 0)
 
-// I2C Master Status
+// I2C Master Status (54)
 #define I2C_MST_STATUS               0x36
 #define I2C_MST_STATUS_PASS_THROUGH  (1 << 7)
 #define I2C_MST_STATUS_SLV4_DONE     (1 << 6)
@@ -239,8 +239,8 @@
 // slave 0
 #define I2C_SLV0_ADDR    0x25
 #define I2C_SLV0_REG     0x26
-#define I2C_SLV0_DO      0x63
 #define I2C_SLV0_CTRL    0x27
+#define I2C_SLV0_DO      0x63
 
 // slave 1
 #define I2C_SLV1_ADDR    0x28
@@ -277,7 +277,7 @@
 //              Data Registers
 /////////////////////////////////////////////////
 
-// data registers
+// data registers (59-96)
 #define ACCEL_XOUT_H     0x3B
 #define ACCEL_XOUT_L     0x3C
 #define ACCEL_YOUT_H     0x3D
