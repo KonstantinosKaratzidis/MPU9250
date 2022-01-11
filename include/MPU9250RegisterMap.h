@@ -1,4 +1,3 @@
-#pragma once
 #ifndef MPU9250REGISTERMAP_H
 #define MPU9250REGISTERMAP_H
 
