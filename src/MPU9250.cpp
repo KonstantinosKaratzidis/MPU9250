@@ -678,7 +678,7 @@ bool MPU9250::self_test_impl()  // Should return percent deviation from factory 
 	return b;
 }
 
-float MPU9250::get_acc_resolution(const ACCEL_FS_SEL accel_af_sel) const {
+float MPU9250::get_acc_resolution(ACCEL_FS_SEL accel_af_sel) const {
 	switch (accel_af_sel) {
 		// Possible accelerometer scales (and their register bit settings) are:
 		// 2 Gs (00), 4 Gs (01), 8 Gs (10), and 16 Gs  (11).
@@ -696,7 +696,7 @@ float MPU9250::get_acc_resolution(const ACCEL_FS_SEL accel_af_sel) const {
 	}
 }
 
-float MPU9250::get_gyro_resolution(const GYRO_FS_SEL gyro_fs_sel) const {
+float MPU9250::get_gyro_resolution(GYRO_FS_SEL gyro_fs_sel) const {
 	switch (gyro_fs_sel) {
 		// Possible gyro scales (and their register bit settings) are:
 		// 250 DPS (00), 500 DPS (01), 1000 DPS (10), and 2000 DPS  (11).
@@ -714,7 +714,7 @@ float MPU9250::get_gyro_resolution(const GYRO_FS_SEL gyro_fs_sel) const {
 	}
 }
 
-float MPU9250::get_mag_resolution(const MAG_OUTPUT_BITS mag_output_bits) const {
+float MPU9250::get_mag_resolution(MAG_OUTPUT_BITS mag_output_bits) const {
 	switch (mag_output_bits) {
 		// Possible magnetometer scales (and their register bit settings) are:
 		// 14 bit resolution (0) and 16 bit resolution (1)
