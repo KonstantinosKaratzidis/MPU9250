@@ -1,5 +1,13 @@
 #ifndef QUATERNIONFILTER_H
 #define QUATERNIONFILTER_H
+#include <inttypes.h>
+#include <math.h>
+
+// TODO: fix dependency
+#ifndef PI
+#define PI 3.14
+#endif
+uint32_t micros(){return 0;}
 
 enum class QuatFilterSel {
 	NONE,
