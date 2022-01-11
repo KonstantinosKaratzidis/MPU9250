@@ -4,7 +4,6 @@
 //Magnetometer Registers
 // #define AK8963_ADDRESS   0x0C
 #define AK8963_WHO_AM_I  0x00
-#define AK8963_WHO_AM_I_VALUE 0x48
 
 // Device Information
 #define AK8963_INFO      0x01

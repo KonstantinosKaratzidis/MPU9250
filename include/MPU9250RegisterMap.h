@@ -3,7 +3,6 @@
 
 // identification register (117)
 #define WHO_AM_I_MPU9250       0x75 // Should return 0x71
-#define WHO_AM_I_MPU9250_VALUE 0x71
 
 ////////////////////////////////////////////////////
 //           Power management and reset
