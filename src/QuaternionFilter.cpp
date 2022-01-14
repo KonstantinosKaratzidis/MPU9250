@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <QuaternionFilter.h>
 
 void QuaternionFilter::update(float ax, float ay, float az,

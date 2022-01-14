@@ -3,7 +3,13 @@
 #include <Wire.h>
 #include <MPU9250RegisterMap.h>
 #include <QuaternionFilter.h>
-typedef uint8_t byte;
+
+namespace MPU9250 {
+
+constexpr uint8_t MPU9250_WHOAMI_DEFAULT_VALUE {0x71};
+constexpr uint8_t MPU9255_WHOAMI_DEFAULT_VALUE {0x73};
+constexpr uint8_t MPU6500_WHOAMI_DEFAULT_VALUE {0x70};
+constexpr uint8_t AK8963_WHOAMI_DEFAULT_VALUE {0x48};
 
 enum class ACCEL_FS_SEL {
 	A2G,
@@ -56,11 +62,7 @@ enum class ACCEL_DLPF_CFG : uint8_t {
 	DLPF_420HZ,
 };
 
-static constexpr uint8_t MPU9250_WHOAMI_DEFAULT_VALUE {0x71};
-static constexpr uint8_t MPU9255_WHOAMI_DEFAULT_VALUE {0x73};
-static constexpr uint8_t MPU6500_WHOAMI_DEFAULT_VALUE {0x70};
-
-struct MPU9250Setting {
+struct Setting {
 	ACCEL_FS_SEL      accel_fs_sel      {ACCEL_FS_SEL::A16G};
 	GYRO_FS_SEL       gyro_fs_sel       {GYRO_FS_SEL::G2000DPS};
 	MAG_OUTPUT_BITS   mag_output_bits   {MAG_OUTPUT_BITS::M16BITS};
@@ -71,7 +73,15 @@ struct MPU9250Setting {
 	ACCEL_DLPF_CFG    accel_dlpf_cfg    {ACCEL_DLPF_CFG::DLPF_45HZ};
 };
 
-class MPU9250 {
+enum class Error : uint8_t {
+	NONE,
+	I2C_ADDRESS,     // invalid i2c address
+	CONNECTION_MPU,  // mpu not connected
+	CONNECTION_MAG,  // magnetometer not connected
+	CONNECTION,      // mpu or magnetometer not connected
+};
+
+class MPU {
 public:
 	static constexpr uint16_t CALIB_GYRO_SENSITIVITY {131};     // LSB/degrees/sec
 	static constexpr uint16_t CALIB_ACCEL_SENSITIVITY {16384};  // LSB/g
@@ -81,14 +91,13 @@ private:
 	static constexpr uint8_t MPU9250_DEFAULT_ADDRESS {0x68};
 	// magnetometer address
 	static constexpr uint8_t AK8963_ADDRESS {0x0C};
-	static constexpr uint8_t AK8963_WHOAMI_DEFAULT_VALUE {0x48};
 	// TODO: this should be configured!!
 	static constexpr uint8_t MAG_MODE {0x06};  // 0x02 for 8 Hz, 0x06 for 100 Hz continuous magnetometer data read
 
 	uint8_t mpu_i2c_addr {MPU9250_DEFAULT_ADDRESS};
 
 	// settings
-	MPU9250Setting setting;
+	Setting setting;
 
 	// resolutions per bit
 	float acc_resolution  {0.f};
@@ -133,8 +142,8 @@ private:
 	uint8_t i2c_err_;
 
 public:
-	bool setup(const uint8_t addr,
-             const MPU9250Setting& mpu_setting = MPU9250Setting(),
+	Error setup(const uint8_t addr,
+             const Setting& mpu_setting = Setting(),
 						 TwoWire& w = Wire);
 
 	bool selftest() { return self_test_impl(); }
@@ -276,11 +285,13 @@ private:
 	float get_gyro_resolution(GYRO_FS_SEL gyro_fs_sel) const;
 	float get_mag_resolution(MAG_OUTPUT_BITS mag_output_bits) const;
 
-	void write_byte(uint8_t address, uint8_t subAddress, uint8_t data);
-	uint8_t read_byte(uint8_t address, uint8_t subAddress);
-	void read_bytes(uint8_t address, uint8_t subAddress,
+	void write_byte(uint8_t address, uint8_t reg, uint8_t data);
+	uint8_t read_byte(uint8_t address, uint8_t reg);
+	void read_bytes(uint8_t address, uint8_t reg,
                   uint8_t count, uint8_t* dest);
 	void print_i2c_error();
 };
+
+} // namespace MPU9250
 
 #endif  // MPU9250_H
