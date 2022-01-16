@@ -1,11 +1,7 @@
+#include <Arduino.h>
 #include <MPU9250RegisterMap.h>
 #include <AK8963RegisterMap.h>
 #include <MPU9250.h>
-#include <QuaternionFilter.h>
-
-// typedef uint8_t byte;
-// #define delay(s)
-// #define DEG_TO_RAD 0
 
 namespace MPU9250 {
 
@@ -134,19 +130,10 @@ void MPU::initAK8963() {
 	write_byte(AK8963_ADDRESS, AK8963_CNTL, (uint8_t)setting.mag_output_bits << 4 | MAG_MODE);  // Set magnetometer data resolution and sample ODR
 	driver->delay(10);
 
-	if (b_verbose) {
-		Serial.println("Mag Factory Calibration Values: ");
-		Serial.print("X-Axis sensitivity offset value ");
-		Serial.println(mag_bias_factory[0], 2);
-		Serial.print("Y-Axis sensitivity offset value ");
-		Serial.println(mag_bias_factory[1], 2);
-		Serial.print("Z-Axis sensitivity offset value ");
-		Serial.println(mag_bias_factory[2], 2);
-	}
 }
 
 void MPU::sleep(bool b) {
-	byte c = read_byte(mpu_i2c_addr, PWR_MGMT_1);  // read the value, change sleep bit to match b, write byte back to register
+	uint8_t c = read_byte(mpu_i2c_addr, PWR_MGMT_1);  // read the value, change sleep bit to match b, write byte back to register
 	if (b) {
 		c = c | 0x40;  // sets the sleep bit
 	} else {
@@ -463,33 +450,12 @@ void MPU::calibrate_mag_impl() {
 	initAK8963();
 	collect_mag_data_to(mag_bias, mag_scale);
 
-	if (b_verbose) {
-		Serial.println("Mag Calibration done!");
-
-		Serial.println("AK8963 mag biases (mG)");
-		Serial.print(mag_bias[0]);
-		Serial.print(", ");
-		Serial.print(mag_bias[1]);
-		Serial.print(", ");
-		Serial.print(mag_bias[2]);
-		Serial.println();
-		Serial.println("AK8963 mag scale (mG)");
-		Serial.print(mag_scale[0]);
-		Serial.print(", ");
-		Serial.print(mag_scale[1]);
-		Serial.print(", ");
-		Serial.print(mag_scale[2]);
-		Serial.println();
-	}
-
 	// restore MAG_OUTPUT_BITS
 	setting.mag_output_bits = mag_output_bits_cache;
 	initAK8963();
 }
 
 void MPU::collect_mag_data_to(float* m_bias, float* m_scale) {
-	if (b_verbose)
-		Serial.println("Mag Calibration: Wave device in a figure eight until done!");
 	driver->delay(4000);
 
 	// shoot for ~fifteen seconds of mag data
@@ -513,18 +479,6 @@ void MPU::collect_mag_data_to(float* m_bias, float* m_scale) {
 			driver->delay(135);  // at 8 Hz ODR, new mag data is available every 125 ms
 		if (MAG_MODE == 0x06)
 			driver->delay(12);   // at 100 Hz ODR, new mag data is available every 10 ms
-	}
-
-	if (b_verbose) {
-		Serial.println("mag x min/max:");
-		Serial.println(mag_min[0]);
-		Serial.println(mag_max[0]);
-		Serial.println("mag y min/max:");
-		Serial.println(mag_min[1]);
-		Serial.println(mag_max[1]);
-		Serial.println("mag z min/max:");
-		Serial.println(mag_min[2]);
-		Serial.println(mag_max[2]);
 	}
 
 	// Get hard iron correction
@@ -634,27 +588,6 @@ bool MPU::self_test_impl()  // Should return percent deviation from factory trim
 	for (int i = 0; i < 3; i++) {
 		self_test_result[i] = 100.0 * ((float)(aSTAvg[i] - aAvg[i])) / factoryTrim[i] - 100.;          // Report percent differences
 		self_test_result[i + 3] = 100.0 * ((float)(gSTAvg[i] - gAvg[i])) / factoryTrim[i + 3] - 100.;  // Report percent differences
-	}
-
-	if (b_verbose) {
-		Serial.print("x-axis self test: acceleration trim within : ");
-		Serial.print(self_test_result[0], 1);
-		Serial.println("% of factory value");
-		Serial.print("y-axis self test: acceleration trim within : ");
-		Serial.print(self_test_result[1], 1);
-		Serial.println("% of factory value");
-		Serial.print("z-axis self test: acceleration trim within : ");
-		Serial.print(self_test_result[2], 1);
-		Serial.println("% of factory value");
-		Serial.print("x-axis self test: gyration trim within : ");
-		Serial.print(self_test_result[3], 1);
-		Serial.println("% of factory value");
-		Serial.print("y-axis self test: gyration trim within : ");
-		Serial.print(self_test_result[4], 1);
-		Serial.println("% of factory value");
-		Serial.print("z-axis self test: gyration trim within : ");
-		Serial.print(self_test_result[5], 1);
-		Serial.println("% of factory value");
 	}
 
 	bool b = true;
