@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <MPU9250RegisterMap.h>
 #include <AK8963RegisterMap.h>
 #include <MPU9250.h>
@@ -10,14 +9,14 @@
 
 namespace MPU9250 {
 
-Error MPU::setup(const uint8_t addr, const Setting& mpu_setting, I2CDriver& w) {
+Error MPU::setup(const uint8_t addr, const Setting& mpu_setting, Driver& w) {
 	// addr should be valid for MPU
 	if ((addr < MPU9250_DEFAULT_ADDRESS) || (addr > MPU9250_DEFAULT_ADDRESS + 7))
 		return Error::I2C_ADDRESS;
 
 	mpu_i2c_addr = addr;
 	setting = mpu_setting;
-	wire = &w;
+	driver = &w;
 
 	acc_resolution = get_acc_resolution(setting.accel_fs_sel);
 	gyro_resolution = get_gyro_resolution(setting.gyro_fs_sel);
@@ -36,7 +35,7 @@ Error MPU::setup(const uint8_t addr, const Setting& mpu_setting, I2CDriver& w) {
 }
 
 bool MPU::isConnectedMPU9250() {
-	byte c = read_byte(mpu_i2c_addr, WHO_AM_I_MPU9250);
+	uint8_t c = read_byte(mpu_i2c_addr, WHO_AM_I_MPU9250);
 	return (c == MPU9250_WHOAMI_DEFAULT_VALUE) ||
          (c == MPU9255_WHOAMI_DEFAULT_VALUE) ||
          (c == MPU6500_WHOAMI_DEFAULT_VALUE);
@@ -50,17 +49,17 @@ bool MPU::isConnectedAK8963() {
 void MPU::initMPU9250() {
 	// reset device
 	write_byte(mpu_i2c_addr, PWR_MGMT_1, PWR_MGMT_1_H_RESET);
-	delay(100);
+	driver->delay(100);
 
 	// wake up device
 	// Clear sleep mode, enable all sensors, wait for all registers to reset
 	write_byte(mpu_i2c_addr, PWR_MGMT_1, 0x00);
-	delay(100);                                
+	driver->delay(100);                                
 
 	// get stable time source
 	// Auto select clock source to be PLL
 	write_byte(mpu_i2c_addr, PWR_MGMT_1, PWR_MGMT_1_CLKSEL(1));
-	delay(200);
+	driver->delay(200);
 
 	// Configure Gyro and Thermometer
 	// Disable FSYNC and set thermometer and gyro bandwidth to 41 and 42 Hz, respectively;
@@ -112,28 +111,28 @@ void MPU::initMPU9250() {
 	c = INT_PIN_CFG_LATCH_INT_EN | INT_PIN_CFG_BYPASS_EN;
 	write_byte(mpu_i2c_addr, INT_PIN_CFG, c);
 	write_byte(mpu_i2c_addr, INT_ENABLE, INT_ENABLE_RAW_RDY);
-	delay(100);
+	driver->delay(100);
 }
 
 void MPU::initAK8963() {
 	// First extract the factory calibration for each magnetometer axis
 	uint8_t raw_data[3];                            // x/y/z gyro calibration data stored here
 	write_byte(AK8963_ADDRESS, AK8963_CNTL, 0x00);  // Power down magnetometer
-	delay(10);
+	driver->delay(10);
 	write_byte(AK8963_ADDRESS, AK8963_CNTL, 0x0F);  // Enter Fuse ROM access mode
-	delay(10);
+	driver->delay(10);
 	read_bytes(AK8963_ADDRESS, AK8963_ASAX, 3, &raw_data[0]);
 	// store sensitivity adjustment values
 	mag_bias_factory[0] = (float)(raw_data[0] - 128) / 256. + 1.;
 	mag_bias_factory[1] = (float)(raw_data[1] - 128) / 256. + 1.;
 	mag_bias_factory[2] = (float)(raw_data[2] - 128) / 256. + 1.;
 	write_byte(AK8963_ADDRESS, AK8963_CNTL, 0x00);  // Power down magnetometer
-	delay(10);
+	driver->delay(10);
 	// Configure the magnetometer for continuous read and highest resolution
 	// set Mscale bit 4 to 1 (0) to enable 16 (14) bit resolution in CNTL register,
 	// and enable continuous mode data acquisition MAG_MODE (bits [3:0]), 0010 for 8 Hz and 0110 for 100 Hz sample rates
 	write_byte(AK8963_ADDRESS, AK8963_CNTL, (uint8_t)setting.mag_output_bits << 4 | MAG_MODE);  // Set magnetometer data resolution and sample ODR
-	delay(10);
+	driver->delay(10);
 
 	if (b_verbose) {
 		Serial.println("Mag Factory Calibration Values: ");
@@ -314,21 +313,21 @@ void MPU::calibrate_acc_gyro_impl() {
 	collect_acc_gyro_data_to(acc_bias, gyro_bias);
 	write_accel_offset();
 	write_gyro_offset();
-	delay(100);
+	driver->delay(100);
 	initMPU9250();
-	delay(1000);
+	driver->delay(1000);
 }
 
 void MPU::set_acc_gyro_to_calibration() {
 	// reset device
 	write_byte(mpu_i2c_addr, PWR_MGMT_1, 0x80);  // Write a one to bit 7 reset bit; toggle reset device
-	delay(100);
+	driver->delay(100);
 
 	// get stable time source; Auto select clock source to be PLL gyroscope reference if ready
 	// else use the internal oscillator, bits 2:0 = 001
 	write_byte(mpu_i2c_addr, PWR_MGMT_1, 0x01);
 	write_byte(mpu_i2c_addr, PWR_MGMT_2, 0x00);
-	delay(200);
+	driver->delay(200);
 
 	// Configure device for bias calculation
 	write_byte(mpu_i2c_addr, INT_ENABLE, 0x00);    // Disable all interrupts
@@ -337,7 +336,7 @@ void MPU::set_acc_gyro_to_calibration() {
 	write_byte(mpu_i2c_addr, I2C_MST_CTRL, 0x00);  // Disable I2C master
 	write_byte(mpu_i2c_addr, USER_CTRL, 0x00);     // Disable FIFO and I2C master modes
 	write_byte(mpu_i2c_addr, USER_CTRL, 0x0C);     // Reset FIFO and DMP
-	delay(15);
+	driver->delay(15);
 
 	// Configure MPU6050 gyro and accelerometer for bias calculation
 	write_byte(mpu_i2c_addr, MPU_CONFIG, 0x01);    // Set low-pass filter to 188 Hz
@@ -348,7 +347,7 @@ void MPU::set_acc_gyro_to_calibration() {
 	// Configure FIFO to capture accelerometer and gyro data for bias calculation
 	write_byte(mpu_i2c_addr, USER_CTRL, 0x40);  // Enable FIFO
 	write_byte(mpu_i2c_addr, FIFO_EN, 0x78);    // Enable gyro and accelerometer sensors for FIFO  (max size 512 bytes in MPU-9150)
-	delay(40);                                  // accumulate 40 samples in 40 milliseconds = 480 bytes
+	driver->delay(40);                                  // accumulate 40 samples in 40 milliseconds = 480 bytes
 }
 
 void MPU::collect_acc_gyro_data_to(float* a_bias, float* g_bias) {
@@ -491,7 +490,7 @@ void MPU::calibrate_mag_impl() {
 void MPU::collect_mag_data_to(float* m_bias, float* m_scale) {
 	if (b_verbose)
 		Serial.println("Mag Calibration: Wave device in a figure eight until done!");
-	delay(4000);
+	driver->delay(4000);
 
 	// shoot for ~fifteen seconds of mag data
 	uint16_t sample_count = 0;
@@ -510,8 +509,10 @@ void MPU::collect_mag_data_to(float* m_bias, float* m_scale) {
 			if (mag_temp[jj] > mag_max[jj]) mag_max[jj] = mag_temp[jj];
 			if (mag_temp[jj] < mag_min[jj]) mag_min[jj] = mag_temp[jj];
 		}
-		if (MAG_MODE == 0x02) delay(135);  // at 8 Hz ODR, new mag data is available every 125 ms
-		if (MAG_MODE == 0x06) delay(12);   // at 100 Hz ODR, new mag data is available every 10 ms
+		if (MAG_MODE == 0x02)
+			driver->delay(135);  // at 8 Hz ODR, new mag data is available every 125 ms
+		if (MAG_MODE == 0x06)
+			driver->delay(12);   // at 100 Hz ODR, new mag data is available every 10 ms
 	}
 
 	if (b_verbose) {
@@ -586,7 +587,7 @@ bool MPU::self_test_impl()  // Should return percent deviation from factory trim
 	// Configure the accelerometer for self-test
 	write_byte(mpu_i2c_addr, ACCEL_CONFIG, 0xE0);  // Enable self test on all three axes and set accelerometer range to +/- 2 g
 	write_byte(mpu_i2c_addr, GYRO_CONFIG, 0xE0);   // Enable self test on all three axes and set gyro range to +/- 250 degrees/s
-	delay(25);                                     // Delay a while to let the device stabilize
+	driver->delay(25);                                     // Delay a while to let the device stabilize
 
 	for (int ii = 0; ii < 200; ii++) {  // get average self-test values of gyro and acclerometer
 
@@ -609,7 +610,7 @@ bool MPU::self_test_impl()  // Should return percent deviation from factory trim
 	// Configure the gyro and accelerometer for normal operation
 	write_byte(mpu_i2c_addr, ACCEL_CONFIG, 0x00);
 	write_byte(mpu_i2c_addr, GYRO_CONFIG, 0x00);
-	delay(25);  // Delay a while to let the device stabilize
+	driver->delay(25);  // Delay a while to let the device stabilize
 
 	// Retrieve accelerometer and gyro factory Self-Test Code from USR_Reg
 	uint8_t self_test_data[6];
@@ -719,19 +720,19 @@ float MPU::get_mag_resolution(MAG_OUTPUT_BITS mag_output_bits) const {
 
 void MPU::write_byte(uint8_t address, uint8_t reg, uint8_t data) {
 	uint8_t buf[2] = {reg, data};
-	wire->write(address, buf, 2);
+	driver->write(address, buf, 2);
 }
 
 uint8_t MPU::read_byte(uint8_t address, uint8_t reg) {
 	uint8_t result = 0;
-	wire->write(address, &reg, 1);
-	wire->read(address, &result, 1);
+	driver->write(address, &reg, 1);
+	driver->read(address, &result, 1);
 	return result;
 }
 
 void MPU::read_bytes(uint8_t address, uint8_t reg, uint8_t count, uint8_t* dest) {
-	wire->write(address, &reg, 1);
-	wire->read(address, dest, count);
+	driver->write(address, &reg, 1);
+	driver->read(address, dest, count);
 }
 
 } // namespace MPU9250
