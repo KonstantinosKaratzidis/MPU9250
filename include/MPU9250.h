@@ -1,10 +1,15 @@
 #ifndef MPU9250_H
 #define MPU9250_H
-#include <Wire.h>
 #include <MPU9250RegisterMap.h>
 #include <QuaternionFilter.h>
 
 namespace MPU9250 {
+
+class I2CDriver {
+public:
+	virtual void write(uint8_t address, const uint8_t *data, int length) =0;
+	virtual void read(uint8_t address, uint8_t *data, int length) =0;
+};
 
 constexpr uint8_t MPU9250_WHOAMI_DEFAULT_VALUE {0x71};
 constexpr uint8_t MPU9255_WHOAMI_DEFAULT_VALUE {0x73};
@@ -138,13 +143,14 @@ private:
 	bool b_verbose {false};
 
 	// I2C
-	TwoWire* wire;
+	I2CDriver* wire;
 	uint8_t i2c_err_;
 
 public:
-	Error setup(const uint8_t addr,
-             const Setting& mpu_setting = Setting(),
-						 TwoWire& w = Wire);
+	Error setup(const uint8_t addr, const Setting& mpu_setting, I2CDriver& w);
+	Error setup(const uint8_t addr, I2CDriver& w){
+		return setup(addr, Setting(), w);
+	}
 
 	bool selftest() { return self_test_impl(); }
 	void verbose(const bool b) { b_verbose = b; }

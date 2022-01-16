@@ -1,6 +1,4 @@
 #include <Arduino.h>
-#include <Wire.h>
-//#include <Serial.h>
 #include <MPU9250RegisterMap.h>
 #include <AK8963RegisterMap.h>
 #include <MPU9250.h>
@@ -12,7 +10,7 @@
 
 namespace MPU9250 {
 
-Error MPU::setup(const uint8_t addr, const Setting& mpu_setting, TwoWire& w) {
+Error MPU::setup(const uint8_t addr, const Setting& mpu_setting, I2CDriver& w) {
 	// addr should be valid for MPU
 	if ((addr < MPU9250_DEFAULT_ADDRESS) || (addr > MPU9250_DEFAULT_ADDRESS + 7))
 		return Error::I2C_ADDRESS;
@@ -720,36 +718,20 @@ float MPU::get_mag_resolution(MAG_OUTPUT_BITS mag_output_bits) const {
 ///////////////////////////////
 
 void MPU::write_byte(uint8_t address, uint8_t reg, uint8_t data) {
-	wire->beginTransmission(address);
-	wire->write(reg);
-	wire->write(data);
-	i2c_err_ = wire->endTransmission();
-	if (i2c_err_) print_i2c_error();
+	uint8_t buf[2] = {reg, data};
+	wire->write(address, buf, 2);
 }
 
 uint8_t MPU::read_byte(uint8_t address, uint8_t reg) {
-	uint8_t data = 0;
-	read_bytes(address, reg, 1, &data);
-	return data;
+	uint8_t result = 0;
+	wire->write(address, &reg, 1);
+	wire->read(address, &result, 1);
+	return result;
 }
 
 void MPU::read_bytes(uint8_t address, uint8_t reg, uint8_t count, uint8_t* dest) {
-	wire->beginTransmission(address);
-	wire->write(reg);
-	i2c_err_ = wire->endTransmission(false);  // repeated start
-	if (i2c_err_)
-		print_i2c_error();
-
-	wire->requestFrom(address, count);
-	while (wire->available()) {
-		*(dest++) = wire->read();
-	}
-}
-
-void MPU::print_i2c_error() {
-	if (i2c_err_ == 7) return;  // to avoid stickbreaker-i2c branch's error code
-	Serial.print("I2C ERROR CODE : ");
-	Serial.println(i2c_err_);
+	wire->write(address, &reg, 1);
+	wire->read(address, dest, count);
 }
 
 } // namespace MPU9250
