@@ -1,7 +1,7 @@
-#include <Arduino.h>
 #include <MPU9250RegisterMap.h>
 #include <AK8963RegisterMap.h>
 #include <MPU9250.h>
+#include "utility.h"
 
 namespace MPU9250 {
 
@@ -165,9 +165,9 @@ bool MPU::update() {
 	float an = -a[0];
 	float ae = +a[1];
 	float ad = +a[2];
-	float gn = +g[0] * DEG_TO_RAD;
-	float ge = -g[1] * DEG_TO_RAD;
-	float gd = -g[2] * DEG_TO_RAD;
+	float gn = +deg_to_rad(g[0]);
+	float ge = -deg_to_rad(g[1]);
+	float gd = -deg_to_rad(g[2]);
 	float mn = +m[1];
 	float me = -m[0];
 	float md = +m[2];
@@ -205,9 +205,9 @@ void MPU::update_rpy(float qw, float qx, float qy, float qz) {
 	rpy[0] = atan2f(a31, a33);
 	rpy[1] = -asinf(a32);
 	rpy[2] = atan2f(a12, a22);
-	rpy[0] *= 180.0f / PI;
-	rpy[1] *= 180.0f / PI;
-	rpy[2] *= 180.0f / PI;
+	rpy[0] *= 180.0f / pi;
+	rpy[1] *= 180.0f / pi;
+	rpy[2] *= 180.0f / pi;
 	rpy[2] += magnetic_declination;
 	if (rpy[2] >= +180.f)
 		rpy[2] -= 360.f;

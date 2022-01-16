@@ -1,5 +1,20 @@
 #include <Arduino.h>
 #include <QuaternionFilter.h>
+#include "utility.h"
+
+namespace MPU9250 {
+
+QuaternionFilter::QuaternionFilter(){
+	GyroMeasError = pi * (40.0f / 180.0f);
+	// gyroscope measurement drift in rad/s/s (start at 0.0 deg/s/s)
+	GyroMeasDrift = pi * (0.0f / 180.0f);
+	// compute beta
+	beta = sqrt(3.0f / 4.0f) * GyroMeasError;
+	// compute zeta, the other free parameter in the Madgwick scheme
+	// usually set to a small or zero value
+	zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;
+
+}
 
 void QuaternionFilter::update(float ax, float ay, float az,
                               float gx, float gy, float gz,
@@ -207,3 +222,5 @@ void QuaternionFilter::mahony(float ax, float ay, float az, float gx, float gy, 
 	q[2] = q[2] * recipNorm;
 	q[3] = q[3] * recipNorm;
 }
+
+} // namespace MPU9250
