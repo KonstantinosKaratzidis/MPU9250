@@ -136,7 +136,7 @@ private:
 	float lin_acc[3] {0.f, 0.f, 0.f};
 
 	// filter
-	QuaternionFilter quat_filter;
+	Filter* filter;
 	size_t n_filter_iter {1};
 
 	// Other settings
@@ -148,10 +148,8 @@ private:
 	Driver* driver;
 
 public:
-	Error setup(const uint8_t addr, const Setting& mpu_setting, Driver& w);
-	Error setup(const uint8_t addr, Driver& w){
-		return setup(addr, Setting(), w);
-	}
+	Error setup(uint8_t addr, Driver& w,
+              Filter& filter, const Setting& setting = Setting{});
 
 	bool selftest() { return self_test_impl(); }
 	void verbose(const bool b) { b_verbose = b; }
@@ -176,7 +174,6 @@ public:
 	void calibrateMag()       { calibrate_mag_impl(); }
 
 	// filter
-	void selectFilter(QuatFilterSel sel) { quat_filter.select_filter(sel); }
 	void setFilterIterations(const size_t n) { if (n > 0) n_filter_iter = n; }
 
 	// update

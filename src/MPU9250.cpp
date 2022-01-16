@@ -5,14 +5,17 @@
 
 namespace MPU9250 {
 
-Error MPU::setup(const uint8_t addr, const Setting& mpu_setting, Driver& w) {
+Error MPU::setup(uint8_t addr, Driver& w,
+						Filter& filter, const Setting& setting)
+{
 	// addr should be valid for MPU
 	if ((addr < MPU9250_DEFAULT_ADDRESS) || (addr > MPU9250_DEFAULT_ADDRESS + 7))
 		return Error::I2C_ADDRESS;
 
 	mpu_i2c_addr = addr;
-	setting = mpu_setting;
+	this->setting = setting;
 	driver = &w;
+	this->filter = &filter;
 
 	acc_resolution = get_acc_resolution(setting.accel_fs_sel);
 	gyro_resolution = get_gyro_resolution(setting.gyro_fs_sel);
@@ -143,7 +146,8 @@ void MPU::sleep(bool b) {
 }
 
 bool MPU::update() {
-	if (!available()) return false;
+	if (!available())
+		return false;
 
 	update_accel_gyro();
 	update_mag();
@@ -173,7 +177,7 @@ bool MPU::update() {
 	float md = +m[2];
 
 	for (size_t i = 0; i < n_filter_iter; ++i) {
-		quat_filter.update(an, ae, ad, gn, ge, gd, mn, me, md, q);
+		filter->update(an, ae, ad, gn, ge, gd, mn, me, md, q);
 	}
 
 	if (!b_ahrs) {

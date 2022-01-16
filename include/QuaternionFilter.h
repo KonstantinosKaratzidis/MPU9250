@@ -46,6 +46,7 @@ private:
 	// usually set to a small or zero value
 	float zeta;
 public:
+	MadgwickFilter();
 	virtual void update_impl(float ax, float ay, float az,
                            float gx, float gy, float gz,
                            float mx, float my, float mz,
@@ -72,49 +73,6 @@ public:
                            float gx, float gy, float gz,
                            float mx, float my, float mz,
                            double deltaT, float* q) override;
-};
-
-class QuaternionFilter {
-	// for madgwick
-	// gyroscope measurement error in rads/s (start at 40 deg/s)
-	float GyroMeasError;
-	// gyroscope measurement drift in rad/s/s (start at 0.0 deg/s/s)
-	float GyroMeasDrift;
-	// compute beta
-	float beta;
-	// compute zeta, the other free parameter in the Madgwick scheme
-	// usually set to a small or zero value
-	float zeta;
-
-	// for mahony
-	float Kp = 30.0;
-	float Ki = 0.0;
-
-	QuatFilterSel filter_sel{QuatFilterSel::MADGWICK};
-	double deltaT{0.};
-	uint32_t newTime{0}, oldTime{0};
-
-public:
-	QuaternionFilter();
-
-	void select_filter(QuatFilterSel sel) { filter_sel = sel; }
-
-	void update(float ax, float ay, float az,
-              float gx, float gy, float gz,
-              float mx, float my, float mz, float* q);
-
-	void no_filter(float ax, float ay, float az,
-                 float gx, float gy, float gz,
-                 float mx, float my, float mz, float* q);
-
-	// Madgwick Quaternion Update
-	void madgwick(float ax, float ay, float az,
-                float gx, float gy, float gz,
-                float mx, float my, float mz, float* q);
-
-	void mahony(float ax, float ay, float az,
-              float gx, float gy, float gz,
-              float mx, float my, float mz, float* q);
 };
 
 } // namespace MPU9250
